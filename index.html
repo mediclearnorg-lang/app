@@ -2,63 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
+        body { background: #050505; color: #fff; font-family: sans-serif; padding: 15px; text-align: center; }
+        .card { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; }
         .accent { color: #FFD700; font-weight: bold; }
-        .btn { background: #FFD700; color: #000; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-top: 10px; }
+        .btn { background: #FFD700; color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 8px; cursor: pointer; }
         .btn-outline { background: transparent; border: 1px solid #FFD700; color: #FFD700; }
-        .info-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 14px; }
+        input { width: 90%; padding: 10px; border-radius: 8px; border: 1px solid #555; background: #222; color: #fff; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <h2>Mining Pips <span class="accent">AI</span></h2>
+    <h3>Mining Pips <span class="accent">HUB</span></h3>
     
     <div class="card">
-        <div class="info-row"><span>Wallet Balance:</span> <span class="accent" id="bal">$0.00</span></div>
-        <div class="info-row"><span>Daily Rate:</span> <span id="daily">$0.00</span></div>
-        <hr style="border: 0.5px solid #333;">
-        <div style="font-size: 18px; margin: 10px 0;">You can buy <span class="accent" id="possible-days">0</span> days</div>
+        <div style="font-size: 12px; color: #888;">Wallet Balance</div>
+        <div style="font-size: 32px;" class="accent" id="bal">Loading...</div>
+        <div id="status" style="font-size: 12px; margin-top: 5px;"></div>
     </div>
 
     <div class="card">
-        <h3>Fixed Plans</h3>
-        <button class="btn" onclick="act('pay_30')">30 Days VIP (<span id="p30">$0</span>)</button>
-        <button class="btn btn-outline" onclick="act('pay_14')">14 Days VIP (<span id="p14">$0</span>)</button>
+        <h4>Deposit Funds</h4>
+        <input type="number" id="dep-amount" placeholder="Enter amount in USD (e.g. 50)">
+        <button class="btn" onclick="requestDeposit()">Start Deposit</button>
     </div>
 
     <div class="card">
-        <h3>Add Credit</h3>
-        <button class="btn btn-outline" onclick="act('invoice_50')">Deposit $50 (Best Value)</button>
-        <button class="btn btn-outline" id="exact-btn" onclick="depositCustom()">Charge for 30 Days</button>
+        <h4>Buy Membership</h4>
+        <button class="btn btn-outline" onclick="buyPlan('14')">14 Days (<span id="p14">--</span>)</button>
+        <button class="btn btn-outline" onclick="buyPlan('30')">30 Days (<span id="p30">--</span>)</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        const params = new URLSearchParams(window.location.search);
+        const p = new URLSearchParams(window.location.search);
+
+        // پر کردن اطلاعات از لینک
+        document.getElementById("bal").innerText = "$" + (p.get('bal') || "0.00");
+        document.getElementById("p14").innerText = "$" + (p.get('p14') || "--");
+        document.getElementById("p30").innerText = "$" + (p.get('p30') || "--");
         
-        const balance = parseFloat(params.get('bal'));
-        const daily = parseFloat(params.get('daily'));
-        const p30 = params.get('p30');
-        const p14 = params.get('p14');
+        const active = p.get('active') === '1';
+        document.getElementById("status").innerText = active ? "✅ VIP ACTIVE" : "❌ INACTIVE";
+        document.getElementById("status").style.color = active ? "#4cd964" : "#ff3b30";
 
-        document.getElementById("bal").innerText = "$" + balance;
-        document.getElementById("daily").innerText = "$" + daily;
-        document.getElementById("p30").innerText = "$" + p30;
-        document.getElementById("p14").innerText = "$" + p14;
-        document.getElementById("possible-days").innerText = Math.floor(balance / daily);
-        document.getElementById("exact-btn").innerText = `Charge $${(p30 - balance).toFixed(2)} for 30 Days`;
-
-        function act(cmd) {
-            tg.sendData(cmd);
+        // ارسال درخواست واریز به ربات
+        function requestDeposit() {
+            const amount = document.getElementById("dep-amount").value;
+            if (!amount || amount <= 0) {
+                tg.showPopup({message: "Please enter a valid amount."});
+                return;
+            }
+            // ارسال دیتا به پایتون: "deposit:50"
+            tg.sendData("deposit:" + amount);
             tg.close();
         }
 
-        function depositCustom() {
-            const needed = (p30 - balance).toFixed(2);
-            tg.sendData("invoice_" + needed);
+        // ارسال درخواست خرید
+        function buyPlan(days) {
+            tg.sendData("buy:" + days);
             tg.close();
         }
     </script>
