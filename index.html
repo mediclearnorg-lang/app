@@ -1,37 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
-        body { background: #050505; color: #fff; font-family: sans-serif; padding: 15px; text-align: center; }
-        .card { background: #151515; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; }
-        .accent { color: #FFD700; font-weight: bold; }
-        .btn { background: #FFD700; color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 8px; cursor: pointer; }
-        .btn-outline { background: transparent; border: 1px solid #FFD700; color: #FFD700; }
-        input { width: 90%; padding: 10px; border-radius: 8px; border: 1px solid #555; background: #222; color: #fff; text-align: center; margin-bottom: 10px; }
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Vazirmatn', sans-serif; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        .card { 
+            background: #111; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid #333; 
+            margin-bottom: 20px; 
+        }
+        .hl { color: #FFD700; font-weight: bold; }
+        .btn { 
+            background: #FFD700; 
+            color: #000; 
+            border: none; 
+            padding: 12px; 
+            width: 100%; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-family: 'Vazirmatn', sans-serif;
+            margin-top: 10px; 
+            cursor: pointer; 
+            font-size: 16px;
+        }
+        .btn-outline { 
+            background: transparent; 
+            border: 1px solid #FFD700; 
+            color: #FFD700; 
+        }
+        input { 
+            width: 90%; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+            background: #222; 
+            color: #fff; 
+            text-align: center; 
+            font-size: 18px; 
+            font-family: 'Vazirmatn', sans-serif;
+            margin-bottom: 10px; 
+            direction: ltr; /* برای عدد نویسی انگلیسی */
+        }
+        h2, h4 { margin: 10px 0; }
     </style>
 </head>
 <body>
-    <h3>Mining Pips <span class="accent">HUB</span></h3>
+    <h2>Mining Pips <span class="hl">HUB</span></h2>
     
     <div class="card">
-        <div style="font-size: 12px; color: #888;">Wallet Balance</div>
-        <div style="font-size: 32px;" class="accent" id="bal">Loading...</div>
-        <div id="status" style="font-size: 12px; margin-top: 5px;"></div>
+        <div style="font-size: 13px; color: #888;">موجودی کیف پول</div>
+        <div style="font-size: 36px; direction: ltr;" class="hl" id="bal">...</div>
+        <div id="status" style="margin-top:5px; font-size:14px;"></div>
     </div>
 
     <div class="card">
-        <h4>Deposit Funds</h4>
-        <input type="number" id="dep-amount" placeholder="Enter amount in USD (e.g. 50)">
-        <button class="btn" onclick="requestDeposit()">Start Deposit</button>
+        <h4>شارژ حساب (تتر/اتریوم)</h4>
+        <input type="number" id="amt" placeholder="مبلغ به دلار (مثلاً 50)">
+        <button class="btn" onclick="reqDeposit()">شروع شارژ</button>
     </div>
 
     <div class="card">
-        <h4>Buy Membership</h4>
-        <button class="btn btn-outline" onclick="buyPlan('14')">14 Days (<span id="p14">--</span>)</button>
-        <button class="btn btn-outline" onclick="buyPlan('30')">30 Days (<span id="p30">--</span>)</button>
+        <h4>خرید اشتراک VIP</h4>
+        <button class="btn btn-outline" onclick="buy('14')">14 روزه (<span id="p14">--</span>)</button>
+        <button class="btn btn-outline" onclick="buy('30')">30 روزه (<span id="p30">--</span>)</button>
     </div>
 
     <script>
@@ -39,30 +83,29 @@
         tg.expand();
         const p = new URLSearchParams(window.location.search);
 
-        // پر کردن اطلاعات از لینک
-        document.getElementById("bal").innerText = "$" + (p.get('bal') || "0.00");
-        document.getElementById("p14").innerText = "$" + (p.get('p14') || "--");
-        document.getElementById("p30").innerText = "$" + (p.get('p30') || "--");
-        
-        const active = p.get('active') === '1';
-        document.getElementById("status").innerText = active ? "✅ VIP ACTIVE" : "❌ INACTIVE";
-        document.getElementById("status").style.color = active ? "#4cd964" : "#ff3b30";
+        // تابع کمکی برای فرمت دهی پول (2 رقم اعشار)
+        function fmt(val) {
+            return parseFloat(val || 0).toFixed(2);
+        }
 
-        // ارسال درخواست واریز به ربات
-        function requestDeposit() {
-            const amount = document.getElementById("dep-amount").value;
-            if (!amount || amount <= 0) {
-                tg.showPopup({message: "Please enter a valid amount."});
-                return;
-            }
-            // ارسال دیتا به پایتون: "deposit:50"
-            tg.sendData("deposit:" + amount);
+        document.getElementById("bal").innerText = "$" + fmt(p.get('bal'));
+        document.getElementById("p14").innerText = "$" + fmt(p.get('p14'));
+        document.getElementById("p30").innerText = "$" + fmt(p.get('p30'));
+        
+        const act = p.get('active') === '1';
+        const st = document.getElementById("status");
+        st.innerText = act ? "✅ اشتراک فعال است" : "❌ اشتراک ندارید";
+        st.style.color = act ? "#0f0" : "#f00";
+
+        function reqDeposit() {
+            const val = document.getElementById("amt").value;
+            if(!val || val<=0) return tg.showPopup({message: "لطفاً مبلغ معتبری وارد کنید"});
+            tg.sendData("deposit:" + val);
             tg.close();
         }
 
-        // ارسال درخواست خرید
-        function buyPlan(days) {
-            tg.sendData("buy:" + days);
+        function buy(plan) {
+            tg.sendData("buy:" + plan);
             tg.close();
         }
     </script>
